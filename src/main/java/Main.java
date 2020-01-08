@@ -1,7 +1,6 @@
-package com.anomyser.main;
 
 public class Main {
     public static void main (String[] args){
-        System.out.println("Hello World");
+        Client client1 = new Client(1234);
     }
 }
