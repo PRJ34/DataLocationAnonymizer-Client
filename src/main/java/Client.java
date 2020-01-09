@@ -16,10 +16,11 @@ public class Client {
     private int id;
     HashMap<Integer, Double> pkTable = new HashMap<Integer, Double>();
 
+
     public Client(int serverPort, int id){
         this.serverPort = serverPort;
         this.id = id;
-        this.start();
+        //this.start();
 /*        try {
             socketChannel = SocketChannel.open(new InetSocketAddress("localhost", serverPort));
         } catch (IOException e) {
@@ -40,23 +41,23 @@ public class Client {
         }
     }
 
-    public byte [] generatePK() throws NoSuchAlgorithmException, InvalidKeyException {
-        System.out.println("Generate DH public key ...");
+    public KeyPair generateKpair() throws NoSuchAlgorithmException {
         KeyPairGenerator aliceKpairGen = KeyPairGenerator.getInstance("DH");
         aliceKpairGen.initialize(2048);
         KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
-
-        // Alice creates and initializes her DH KeyAgreement object
-        KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");
+        return aliceKpair;
+        /*// Alice creates and initializes her DH KeyAgreement object
+        aliceKeyAgree = KeyAgreement.getInstance("DH");
         aliceKeyAgree.init(aliceKpair.getPrivate());
 
         // Alice encodes her public key, and sends it over to Bob.
         byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
-        return alicePubKeyEnc;
+        return alicePubKeyEnc;*/
     }
 
-    public byte [] generatePK_fromSpec(X509EncodedKeySpec x509KeySpec) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidAlgorithmParameterException, InvalidKeyException {
+    public KeyPair generateKpair_fromSpec(byte[] alicePubKeyEnc) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidAlgorithmParameterException, InvalidKeyException {
         KeyFactory bobKeyFac = KeyFactory.getInstance("DH");
+        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(alicePubKeyEnc);
 
         PublicKey alicePubKey = bobKeyFac.generatePublic(x509KeySpec);
 
@@ -68,21 +69,41 @@ public class Client {
         DHParameterSpec dhParamFromAlicePubKey = ((DHPublicKey)alicePubKey).getParams();
 
         // Bob creates his own DH key pair
-        System.out.println("BOB: Generate DH keypair ...");
         KeyPairGenerator bobKpairGen = KeyPairGenerator.getInstance("DH");
         bobKpairGen.initialize(dhParamFromAlicePubKey);
         KeyPair bobKpair = bobKpairGen.generateKeyPair();
+        return bobKpair;
 
-        // Bob creates and initializes his DH KeyAgreement object
+        /*// Bob creates and initializes his DH KeyAgreement object
         System.out.println("BOB: Initialization ...");
-        KeyAgreement bobKeyAgree = KeyAgreement.getInstance("DH");
+        bobKeyAgree = KeyAgreement.getInstance("DH");
         bobKeyAgree.init(bobKpair.getPrivate());
 
         // Bob encodes his public key, and sends it over to Alice.
         byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
 
-        return  bobPubKeyEnc;
+        return  bobPubKeyEnc;*/
     }
+
+    public KeyAgreement handleReceivedPK(byte [] pubKeyEnc, KeyAgreement keyAgree) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
+        KeyFactory keyFac = KeyFactory.getInstance("DH");
+        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(pubKeyEnc);
+        PublicKey pubKey = keyFac.generatePublic(x509KeySpec);
+        keyAgree.doPhase(pubKey, true);
+        return keyAgree;
+    }
+
+
+    public byte [] createSecret(KeyAgreement keyAgree){
+        /*
+         * At this stage, both Alice and Bob have completed the DH key
+         * agreement protocol.
+         * Both generate the (same) shared secret.
+         */
+        byte[] sharedSecret = keyAgree.generateSecret();
+        return sharedSecret;
+    }
+
 
 
     public void initializeForTests(){

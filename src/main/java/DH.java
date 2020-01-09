@@ -1,3 +1,4 @@
+/*
 import javax.crypto.Cipher;
 import javax.crypto.KeyAgreement;
 import javax.crypto.ShortBufferException;
@@ -6,7 +7,8 @@ import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
- /*
+ */
+/*
      * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
      *
      * Redistribution and use in source and binary forms, with or without
@@ -35,7 +37,8 @@ import java.security.spec.X509EncodedKeySpec;
      * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
      * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
      * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-     */
+     *//*
+
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
@@ -50,9 +53,11 @@ public class DH {
         private DH() {}
         public static void main(String argv[]) throws Exception, ShortBufferException {
 
-            /*
+            */
+/*
              * Alice creates her own DH key pair with 2048-bit key size
-             */
+             *//*
+
             System.out.println("ALICE: Generate DH keypair ...");
             KeyPairGenerator aliceKpairGen = KeyPairGenerator.getInstance("DH");
             aliceKpairGen.initialize(2048);
@@ -66,21 +71,25 @@ public class DH {
             // Alice encodes her public key, and sends it over to Bob.
             byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
 
-            /*
+            */
+/*
              * Let's turn over to Bob. Bob has received Alice's public key
              * in encoded format.
              * He instantiates a DH public key from the encoded key material.
-             */
+             *//*
+
             KeyFactory bobKeyFac = KeyFactory.getInstance("DH");
             X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(alicePubKeyEnc);
 
             PublicKey alicePubKey = bobKeyFac.generatePublic(x509KeySpec);
 
-            /*
+            */
+/*
              * Bob gets the DH parameters associated with Alice's public key.
              * He must use the same parameters when he generates his own key
              * pair.
-             */
+             *//*
+
             DHParameterSpec dhParamFromAlicePubKey = ((DHPublicKey)alicePubKey).getParams();
 
             // Bob creates his own DH key pair
@@ -97,32 +106,38 @@ public class DH {
             // Bob encodes his public key, and sends it over to Alice.
             byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
 
-            /*
+            */
+/*
              * Alice uses Bob's public key for the first (and only) phase
              * of her version of the DH
              * protocol.
              * Before she can do so, she has to instantiate a DH public key
              * from Bob's encoded key material.
-             */
+             *//*
+
             KeyFactory aliceKeyFac = KeyFactory.getInstance("DH");
             x509KeySpec = new X509EncodedKeySpec(bobPubKeyEnc);
             PublicKey bobPubKey = aliceKeyFac.generatePublic(x509KeySpec);
             System.out.println("ALICE: Execute PHASE1 ...");
             aliceKeyAgree.doPhase(bobPubKey, true);
 
-            /*
+            */
+/*
              * Bob uses Alice's public key for the first (and only) phase
              * of his version of the DH
              * protocol.
-             */
+             *//*
+
             System.out.println("BOB: Execute PHASE1 ...");
             bobKeyAgree.doPhase(alicePubKey, true);
 
-            /*
+            */
+/*
              * At this stage, both Alice and Bob have completed the DH key
              * agreement protocol.
              * Both generate the (same) shared secret.
-             */
+             *//*
+
             byte[] aliceSharedSecret = aliceKeyAgree.generateSecret();
             int aliceLen = aliceSharedSecret.length;
             byte[] bobSharedSecret = new byte[aliceLen];
@@ -136,7 +151,8 @@ public class DH {
                 throw new Exception("Shared secrets differ");
             System.out.println("Shared secrets are the same");
 
-            /*
+            */
+/*
              * Now let's create a SecretKey object using the shared secret
              * and use it for encryption. First, we generate SecretKeys for the
              * "AES" algorithm (based on the raw shared secret data) and
@@ -155,14 +171,17 @@ public class DH {
              * do the decryption. When initializing the Cipher for decryption,
              * the (reinstantiated) AlgorithmParameters object must be explicitly
              * passed to the Cipher.init() method.
-             */
+             *//*
+
             System.out.println("Use shared secret as SecretKey object ...");
             SecretKeySpec bobAesKey = new SecretKeySpec(bobSharedSecret, 0, 16, "AES");
             SecretKeySpec aliceAesKey = new SecretKeySpec(aliceSharedSecret, 0, 16, "AES");
 
-            /*
+            */
+/*
              * Bob encrypts, using AES in CBC mode
-             */
+             *//*
+
             Cipher bobCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             bobCipher.init(Cipher.ENCRYPT_MODE, bobAesKey);
             byte[] cleartext = "This is just an example".getBytes();
@@ -172,9 +191,11 @@ public class DH {
             // encoded format
             byte[] encodedParams = bobCipher.getParameters().getEncoded();
 
-            /*
+            */
+/*
              * Alice decrypts, using AES in CBC mode
-             */
+             *//*
+
 
             // Instantiate AlgorithmParameters object from parameter encoding
             // obtained from Bob
@@ -190,9 +211,11 @@ public class DH {
                     "same as cleartext");
         }
 
-        /*
+        */
+/*
          * Converts a byte to hex digit and writes to the supplied buffer
-         */
+         *//*
+
         private static void byte2hex(byte b, StringBuffer buf) {
             char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
                     '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -202,9 +225,11 @@ public class DH {
             buf.append(hexChars[low]);
         }
 
-        /*
+        */
+/*
          * Converts a byte array to hex string
-         */
+         *//*
+
         private static String toHexString(byte[] block) {
             StringBuffer buf = new StringBuffer();
             int len = block.length;
@@ -216,4 +241,4 @@ public class DH {
             }
             return buf.toString();
         }
-    }
+    }*/
