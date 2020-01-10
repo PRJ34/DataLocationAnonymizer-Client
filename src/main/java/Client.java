@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -41,17 +42,27 @@ public class Client {
                     socketChannel = SocketChannel.open(new InetSocketAddress("localhost", serverPort));
                 else if(socketChannel.isConnected()){
                     System.out.println("connected");
-                    DataInputStream dataInputStream = new DataInputStream(socketChannel.socket().getInputStream());
-                    String s = dataInputStream.readUTF();
-                    System.out.println("message reçu " + s);
-                    if(s == "ok"){
+                    while (buffer.remaining() == 256) {
+                        socketChannel.read(buffer);
+                    }
+                    buffer.flip();
+                    //String s = new String(buffer.array(), "UTF-8");
+                    CharBuffer s = StandardCharsets.UTF_8.decode(buffer);
+                    buffer.clear();
+                    System.out.println("message reçu " + s.toString());
+                    if(s.toString().contains("ok")){
                         this.generateKpair();
                         String payload = this.id+":"+this.port+":"+this.kPair.getPublic().getEncoded();
                         ByteBuffer payload_buffer = StandardCharsets.UTF_8.encode(payload);
                         System.out.println("send");
                         socketChannel.write(payload_buffer);
-                        socketChannel.read(buffer);
-                        break;
+                        while (buffer.remaining() == 256) {
+                            socketChannel.read(buffer);
+                        }
+                        buffer.flip();
+                        s = StandardCharsets.UTF_8.decode(buffer);
+                        buffer.clear();
+                        System.out.println(s.toString());
                     }
                 }
 
