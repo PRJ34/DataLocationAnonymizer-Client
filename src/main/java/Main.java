@@ -9,13 +9,16 @@ public class Main {
         Client alice = new Client(1234, id);
         //Client bob = new Client(1234, 1);
 
-        /*try {
+/*        try {
             KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");;
             KeyAgreement bobKeyAgree = KeyAgreement.getInstance("DH");
-            KeyPair aliceKpair = alice.generateKpair();
+            alice.generateKpair();
+            KeyPair aliceKpair =alice.getkPair();
             aliceKeyAgree.init(aliceKpair.getPrivate());
             byte[] alicePK = aliceKpair.getPublic().getEncoded();
-            KeyPair bobKpair = bob.generateKpair_fromSpec(alicePK);
+            //KeyPair bobKpair = bob.generateKpair_fromSpec(alicePK);
+            bob.generateKpair();
+            KeyPair bobKpair = bob.getkPair();
             bobKeyAgree.init(bobKpair.getPrivate());
             byte[] bobPK = bobKpair.getPublic().getEncoded();
             aliceKeyAgree = alice.handleReceivedPK(bobPK, aliceKeyAgree);
@@ -32,12 +35,14 @@ public class Main {
             byte[] randomBytes = new byte[128];
             SecureRandom secureRandom1 = SecureRandom.getInstance("SHA1PRNG");
             secureRandom1.setSeed(aliceSecret);
-            secureRandom1.nextBytes(randomBytes);
-            System.out.println(toHexString(randomBytes));
+            System.out.println(secureRandom1.nextInt(1000));
+            //secureRandom1.nextBytes(randomBytes);
+            //System.out.println(toHexString(randomBytes));
             SecureRandom secureRandom2 = SecureRandom.getInstance("SHA1PRNG");
             secureRandom2.setSeed(bobSecret);
-            secureRandom2.nextBytes(randomBytes);
-            System.out.println(toHexString(randomBytes));
+            System.out.println(secureRandom2.nextInt(1000));
+            //secureRandom2.nextBytes(randomBytes);
+            //System.out.println(toHexString(randomBytes));
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {

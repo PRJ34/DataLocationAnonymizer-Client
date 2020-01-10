@@ -11,7 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Client {
     private SocketChannel socketChannel = null;
@@ -19,7 +21,8 @@ public class Client {
     private int id;
     private int port;
     private KeyPair kPair;
-    HashMap<Integer, Double> pkTable = new HashMap<Integer, Double>();
+    private ArrayList<TableRow> tablePK = new ArrayList<>();
+    private HashMap<Integer, byte[]> sharedSecrets = new HashMap<>();
 
 
     public Client(int serverPort, int id){
@@ -61,9 +64,12 @@ public class Client {
                         }
                         buffer.flip();
                         s = StandardCharsets.UTF_8.decode(buffer);
+                        this.parseTablePK(s.toString());
                         buffer.clear();
                         System.out.println(s.toString());
+                        socketChannel.close();
                     }
+
                 }
 
             } catch (IOException e) {
@@ -74,8 +80,29 @@ public class Client {
         }
     }
 
-    public void parseTablePK(String receivedTable){
+    public void computeSharedSecret() throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
+        for(TableRow row : this.tablePK){
+            KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");;
+            aliceKeyAgree.init(this.kPair.getPrivate());
+            byte[] bobPK = row.getPK();
+            aliceKeyAgree = this.handleReceivedPK(bobPK, aliceKeyAgree);
+            byte[] aliceSecret = this.createSecret(aliceKeyAgree);
+            this.sharedSecrets.put(row.getId(), aliceSecret);
+        }
+    }
 
+    public void computeMask(int height, int width){
+        //SecureRandom secureRandom1 = SecureRandom.getInstance("SHA1PRNG");
+        //secureRandom1.setSeed(aliceSecret);
+        //secureRandom1.nextBytes(randomBytes);
+    }
+
+    public void parseTablePK(String receivedTable){
+        String [] rows = receivedTable.split(";");
+        for (int i = 0; i<rows.length; i++){
+            String [] row = rows[i].split(":");
+            this.tablePK.add(new TableRow(Integer.valueOf(row[0]), Integer.valueOf(row[1]), row[2].getBytes()));
+        }
     }
 
     public void generateKpair() throws NoSuchAlgorithmException {
@@ -141,9 +168,7 @@ public class Client {
         return sharedSecret;
     }
 
-
-
-    public void initializeForTests(){
-
+    public KeyPair getkPair() {
+        return kPair;
     }
 }
