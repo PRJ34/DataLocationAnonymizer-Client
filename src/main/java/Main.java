@@ -5,7 +5,8 @@ import java.security.spec.InvalidKeySpecException;
 
 public class Main {
     public static void main (String[] args){
-        Client alice = new Client(1234, 1);
+        int id = Integer.valueOf(args[0]);
+        Client alice = new Client(1234, id);
         //Client bob = new Client(1234, 1);
 
         /*try {

@@ -1,6 +1,7 @@
 import javax.crypto.KeyAgreement;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -39,19 +40,24 @@ public class Client {
                 if(socketChannel == null)
                     socketChannel = SocketChannel.open(new InetSocketAddress("localhost", serverPort));
                 else if(socketChannel.isConnected()){
-                    socketChannel.read(buffer);
-                    String s = StandardCharsets.UTF_8.decode(buffer).toString();
-                    System.out.println("message reçu" + s);
+                    System.out.println("connected");
+                    DataInputStream dataInputStream = new DataInputStream(socketChannel.socket().getInputStream());
+                    String s = dataInputStream.readUTF();
+                    System.out.println("message reçu " + s);
                     if(s == "ok"){
                         this.generateKpair();
                         String payload = this.id+":"+this.port+":"+this.kPair.getPublic().getEncoded();
-                        ByteBuffer payload_buffer = ByteBuffer.wrap(payload.getBytes());
+                        ByteBuffer payload_buffer = StandardCharsets.UTF_8.encode(payload);
+                        System.out.println("send");
                         socketChannel.write(payload_buffer);
                         socketChannel.read(buffer);
+                        break;
                     }
                 }
 
-            } catch (IOException | NoSuchAlgorithmException e) {
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
         }
