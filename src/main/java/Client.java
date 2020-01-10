@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -14,13 +15,16 @@ public class Client {
     private SocketChannel socketChannel = null;
     private int serverPort;
     private int id;
+    private int port;
+    private KeyPair kPair;
     HashMap<Integer, Double> pkTable = new HashMap<Integer, Double>();
 
 
     public Client(int serverPort, int id){
         this.serverPort = serverPort;
         this.id = id;
-        //this.start();
+        this.port = 1234 + id;
+        this.start();
 /*        try {
             socketChannel = SocketChannel.open(new InetSocketAddress("localhost", serverPort));
         } catch (IOException e) {
@@ -34,18 +38,34 @@ public class Client {
             try {
                 if(socketChannel == null)
                     socketChannel = SocketChannel.open(new InetSocketAddress("localhost", serverPort));
-                socketChannel.read(buffer);
-            } catch (IOException e) {
+                else if(socketChannel.isConnected()){
+                    socketChannel.read(buffer);
+                    String s = StandardCharsets.UTF_8.decode(buffer).toString();
+                    System.out.println("message reçu" + s);
+                    if(s == "ok"){
+                        this.generateKpair();
+                        String payload = this.id+":"+this.port+":"+this.kPair.getPublic().getEncoded();
+                        ByteBuffer payload_buffer = ByteBuffer.wrap(payload.getBytes());
+                        socketChannel.write(payload_buffer);
+                        socketChannel.read(buffer);
+                    }
+                }
+
+            } catch (IOException | NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public KeyPair generateKpair() throws NoSuchAlgorithmException {
+    public void parseTablePK(String receivedTable){
+
+    }
+
+    public void generateKpair() throws NoSuchAlgorithmException {
         KeyPairGenerator aliceKpairGen = KeyPairGenerator.getInstance("DH");
         aliceKpairGen.initialize(2048);
         KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
-        return aliceKpair;
+        this.kPair = aliceKpair;
         /*// Alice creates and initializes her DH KeyAgreement object
         aliceKeyAgree = KeyAgreement.getInstance("DH");
         aliceKeyAgree.init(aliceKpair.getPrivate());

@@ -6,9 +6,9 @@ import java.security.spec.InvalidKeySpecException;
 public class Main {
     public static void main (String[] args){
         Client alice = new Client(1234, 1);
-        Client bob = new Client(1234, 1);
+        //Client bob = new Client(1234, 1);
 
-        try {
+        /*try {
             KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");;
             KeyAgreement bobKeyAgree = KeyAgreement.getInstance("DH");
             KeyPair aliceKpair = alice.generateKpair();
@@ -47,7 +47,7 @@ public class Main {
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
 
     }
 
