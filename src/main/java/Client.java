@@ -23,6 +23,7 @@ public class Client {
     private KeyPair kPair;
     private ArrayList<TableRow> tablePK = new ArrayList<>();
     private HashMap<Integer, byte[]> sharedSecrets = new HashMap<>();
+    private ArrayList<int[][]> masks = new ArrayList<>();
 
 
     public Client(int serverPort, int id){
@@ -38,35 +39,46 @@ public class Client {
     }
 
     public void start(){
-        ByteBuffer buffer = ByteBuffer.allocate(256);
+        ByteBuffer buffer = ByteBuffer.allocate(4000);
         while (true){
             try {
-                if(socketChannel == null)
+                if(socketChannel == null || !socketChannel.isOpen())
                     socketChannel = SocketChannel.open(new InetSocketAddress("localhost", serverPort));
                 else if(socketChannel.isConnected()){
-                    System.out.println("connected");
-                    while (buffer.remaining() == 256) {
+                    System.out.println("Connected");
+                    while (buffer.remaining() == 4000) {
                         socketChannel.read(buffer);
                     }
                     buffer.flip();
-                    //String s = new String(buffer.array(), "UTF-8");
                     CharBuffer s = StandardCharsets.UTF_8.decode(buffer);
                     buffer.clear();
                     System.out.println("message reçu " + s.toString());
                     if(s.toString().contains("ok")){
                         this.generateKpair();
-                        String payload = this.id+":"+this.port+":"+this.kPair.getPublic().getEncoded();
-                        ByteBuffer payload_buffer = StandardCharsets.UTF_8.encode(payload);
-                        System.out.println("send");
+                        String payload_string = this.id+":"+this.port+":";
+                        ByteBuffer string_buffer = StandardCharsets.UTF_8.encode(payload_string);
+                        ByteBuffer byte_buffer = ByteBuffer.wrap(this.kPair.getPublic().getEncoded());
+                        ByteBuffer payload_buffer = ByteBuffer.allocate(4+string_buffer.capacity()+byte_buffer.capacity()).putInt(string_buffer.limit()).put(string_buffer).put(byte_buffer);
+                        payload_buffer.flip();
+                        System.out.println("send info to server");
                         socketChannel.write(payload_buffer);
-                        while (buffer.remaining() == 256) {
+                        System.out.println("wait for table from server");
+                        while (buffer.remaining() == 4000) {
                             socketChannel.read(buffer);
                         }
                         buffer.flip();
-                        s = StandardCharsets.UTF_8.decode(buffer);
-                        this.parseTablePK(s.toString());
+                        this.parseTablePK(buffer);
                         buffer.clear();
-                        System.out.println(s.toString());
+                        this.computeSharedSecret();
+                        this.computeMask(181,60);
+                        for(int[][]m : this.masks){
+                            for (int h=0; h<10;h++){
+                                for(int w=0; w<10;w++){
+                                    System.out.print(m[h][w]+":");
+                                }
+                            }
+                            System.out.println();
+                        }
                         socketChannel.close();
                     }
 
@@ -75,6 +87,10 @@ public class Client {
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (InvalidKeySpecException e) {
+                e.printStackTrace();
+            } catch (InvalidKeyException e) {
                 e.printStackTrace();
             }
         }
@@ -91,17 +107,50 @@ public class Client {
         }
     }
 
-    public void computeMask(int height, int width){
-        //SecureRandom secureRandom1 = SecureRandom.getInstance("SHA1PRNG");
-        //secureRandom1.setSeed(aliceSecret);
-        //secureRandom1.nextBytes(randomBytes);
+    public void computeMask(int height, int width) throws NoSuchAlgorithmException {
+        int bound = 5000;
+        for(int id : sharedSecrets.keySet()){
+            int factor;
+            if(id < this.id)
+                factor = -1;
+            else if(id == this.id)
+                factor = 0;
+            else
+                factor = 1;
+            SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+            sr.setSeed(this.sharedSecrets.get(id));
+            int[][] mask = new int[height][width];
+            for(int i = 0; i<height;i++){
+                for (int j = 0; j<width; j++){
+                    mask[i][j] = factor*sr.nextInt(bound);
+                }
+            }
+            this.masks.add(mask);
+        }
     }
 
-    public void parseTablePK(String receivedTable){
-        String [] rows = receivedTable.split(";");
-        for (int i = 0; i<rows.length; i++){
-            String [] row = rows[i].split(":");
-            this.tablePK.add(new TableRow(Integer.valueOf(row[0]), Integer.valueOf(row[1]), row[2].getBytes()));
+    public void parseTablePK(ByteBuffer receivedTable){
+        ArrayList<ByteBuffer> rows = new ArrayList<>();
+        int length;
+        byte[] byte_arr;
+        while (receivedTable.remaining() != 0){
+            length = receivedTable.getInt();
+            byte_arr = new byte[length];
+            receivedTable.get(byte_arr);
+            rows.add(ByteBuffer.wrap(byte_arr));
+        }
+        byte[] string_buffer;
+        byte[] byte_buffer;
+        for (ByteBuffer bb : rows){
+            length = bb.getInt();
+            string_buffer = new byte[length];
+            bb.get(string_buffer);
+            ByteBuffer string_bb = ByteBuffer.wrap(string_buffer);
+            CharBuffer s = StandardCharsets.UTF_8.decode(string_bb);
+            byte_buffer = new byte[bb.remaining()];
+            bb.get(byte_buffer);
+            String [] strSplit = s.toString().split(":");
+            this.tablePK.add(new TableRow(Integer.valueOf(strSplit[0]), Integer.valueOf(strSplit[1]), byte_buffer));
         }
     }
 
@@ -110,13 +159,6 @@ public class Client {
         aliceKpairGen.initialize(2048);
         KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
         this.kPair = aliceKpair;
-        /*// Alice creates and initializes her DH KeyAgreement object
-        aliceKeyAgree = KeyAgreement.getInstance("DH");
-        aliceKeyAgree.init(aliceKpair.getPrivate());
-
-        // Alice encodes her public key, and sends it over to Bob.
-        byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
-        return alicePubKeyEnc;*/
     }
 
     public KeyPair generateKpair_fromSpec(byte[] alicePubKeyEnc) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidAlgorithmParameterException, InvalidKeyException {
@@ -137,16 +179,6 @@ public class Client {
         bobKpairGen.initialize(dhParamFromAlicePubKey);
         KeyPair bobKpair = bobKpairGen.generateKeyPair();
         return bobKpair;
-
-        /*// Bob creates and initializes his DH KeyAgreement object
-        System.out.println("BOB: Initialization ...");
-        bobKeyAgree = KeyAgreement.getInstance("DH");
-        bobKeyAgree.init(bobKpair.getPrivate());
-
-        // Bob encodes his public key, and sends it over to Alice.
-        byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
-
-        return  bobPubKeyEnc;*/
     }
 
     public KeyAgreement handleReceivedPK(byte [] pubKeyEnc, KeyAgreement keyAgree) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
@@ -170,5 +202,26 @@ public class Client {
 
     public KeyPair getkPair() {
         return kPair;
+    }
+
+    private static void byte2hex(byte b, StringBuffer buf) {
+        char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
+                '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+        int high = ((b & 0xf0) >> 4);
+        int low = (b & 0x0f);
+        buf.append(hexChars[high]);
+        buf.append(hexChars[low]);
+    }
+
+    private static String toHexString(byte[] block) {
+        StringBuffer buf = new StringBuffer();
+        int len = block.length;
+        for (int i = 0; i < len; i++) {
+            byte2hex(block[i], buf);
+            if (i < len-1) {
+                buf.append(":");
+            }
+        }
+        return buf.toString();
     }
 }
