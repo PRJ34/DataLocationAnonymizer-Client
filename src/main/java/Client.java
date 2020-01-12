@@ -1,8 +1,10 @@
 import javax.crypto.KeyAgreement;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -72,7 +74,13 @@ public class Client {
                         this.parseTablePK(buffer);
                         buffer.clear();
                         this.computeSharedSecret();
-                        this.computeMask(181,60);
+                        this.computeMask(60,181);
+                        this.runPythonScript(timeFrame);
+                        Heatmap hm = new Heatmap("map.csv");
+                        int[][] hm_arr = hm.getHeatmap();
+                        hm_arr = this.addMasks(hm_arr);
+
+                        //print to check if there is common masks between clients as planned
                         for(int[][]m : this.masks){
                             for (int h=0; h<10;h++){
                                 for(int w=0; w<10;w++){
@@ -96,6 +104,28 @@ public class Client {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void runPythonScript(String param) throws IOException {
+        int number1 = 10;
+        int number2 = 32;
+
+        ProcessBuilder pb = new ProcessBuilder("python","create_map.py",""+param);
+        Process p = pb.start();
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        int ret = Integer.parseInt(in.readLine());
+    }
+
+    public int[][] addMasks(int[][] hm){
+        for(int[][] mask : this.masks){
+            for(int i = 0; i<hm.length;i++){
+                for (int j = 0; j<hm[0].length; j++){
+                    hm[i][j] += mask[i][j];
+                }
+            }
+        }
+        return hm;
     }
 
     public void computeSharedSecret() throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {

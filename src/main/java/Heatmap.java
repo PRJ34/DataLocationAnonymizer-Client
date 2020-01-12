@@ -2,10 +2,10 @@ import java.io.*;
 
 public class Heatmap {
 
-    private double heatmap[][];
+    private int heatmap[][];
 
     public Heatmap(String filename) {
-        heatmap = new double[60][181];
+        heatmap = new int[60][181];
         this.loadFromFile(filename);
     }
 
@@ -44,7 +44,7 @@ public class Heatmap {
             int j = 0;
             for (String v : values) {
                 System.out.print(v + " ");
-                heatmap[i][j] = Double.valueOf(v);
+                heatmap[i][j] = Integer.valueOf(v);
                 j++;
             }
             System.out.println();
@@ -53,7 +53,7 @@ public class Heatmap {
         }
     }
 
-    public double[][] getHeatmap() {
+    public int[][] getHeatmap() {
         return heatmap;
     }
 }
