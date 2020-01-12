@@ -1,10 +1,7 @@
 import javax.crypto.KeyAgreement;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -74,13 +71,7 @@ public class Client {
                         this.parseTablePK(buffer);
                         buffer.clear();
                         this.computeSharedSecret();
-                        this.computeMask(60,181);
-                        this.runPythonScript(timeFrame);
-                        Heatmap hm = new Heatmap("map.csv");
-                        int[][] hm_arr = hm.getHeatmap();
-                        hm_arr = this.addMasks(hm_arr);
-
-                        //print to check if there is common masks between clients as planned
+                        this.computeMask(181,60);
                         for(int[][]m : this.masks){
                             for (int h=0; h<10;h++){
                                 for(int w=0; w<10;w++){
@@ -103,6 +94,43 @@ public class Client {
             } catch (InvalidKeyException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private List<ByteBuffer[]> buildHeatmapBuffer(double heatmap[][]) {
+        List<ByteBuffer[]> buffers = new ArrayList<>();
+
+        for (int i = 0; i < Heatmap.HEATMAP_ROW; i++) {
+            ByteBuffer buffer[] = new ByteBuffer[Heatmap.HEATMAP_COL];
+            for (int j = 0; j < Heatmap.HEATMAP_COL; j++) {
+                buffer[j] = ByteBuffer.allocate(2048);
+                buffer[j].putDouble(heatmap[i][j]);
+            }
+            buffers.add(buffer);
+        }
+
+        return buffers;
+    }
+
+    public void sendHeatmap(double heatmap[][]) {
+//        List<ByteBuffer[]> buffers = this.buildHeatmapBuffer(heatmap);
+//
+//        for (ByteBuffer[] buffer : buffers) {
+//            try {
+//                socketChannel.write(buffer);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+        try {
+            socketChannel.configureBlocking(true);
+            ObjectOutputStream oos = new
+                    ObjectOutputStream(socketChannel.socket().getOutputStream());
+            oos.writeObject(heatmap);
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

@@ -2,10 +2,14 @@ import java.io.*;
 
 public class Heatmap {
 
-    private int heatmap[][];
+    public final static int HEATMAP_ROW = 60;
+
+    public final static int HEATMAP_COL = 181;
+
+    private double heatmap[][];
 
     public Heatmap(String filename) {
-        heatmap = new int[60][181];
+        heatmap = new double[HEATMAP_ROW][HEATMAP_COL];
         this.loadFromFile(filename);
     }
 
@@ -43,17 +47,45 @@ public class Heatmap {
 
             int j = 0;
             for (String v : values) {
-                System.out.print(v + " ");
-                heatmap[i][j] = Integer.valueOf(v);
+                heatmap[i][j] = Double.valueOf(v);
                 j++;
             }
-            System.out.println();
-
             i++;
         }
     }
 
-    public int[][] getHeatmap() {
+    public static void saveHeatmap(String filename, double heatmap[][]) {
+        String heatmapLine = buildHeatmapLine(heatmap);
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(filename));
+            writer.write(heatmapLine);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String buildHeatmapLine(double heatmap[][]) {
+        String line = "";
+
+        for (int i = 0; i < HEATMAP_ROW; i++) {
+            line += "\"[";
+            for (int j = 0; j < HEATMAP_COL; j++) {
+                line += String.valueOf(heatmap[i][j]);
+                if (j + 1 < HEATMAP_COL)
+                    line += ", ";
+            }
+            line += "]\"";
+            if (i + 1 < HEATMAP_ROW)
+                line += ",";
+        }
+
+        return line;
+    }
+
+    public double[][] getHeatmap() {
         return heatmap;
     }
 }
