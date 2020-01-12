@@ -6,6 +6,8 @@ import java.security.spec.InvalidKeySpecException;
 public class Main {
     public static void main (String[] args){
         int id = Integer.valueOf(args[0]);
+        //Heatmap hm = new Heatmap("map.csv"); // TODO Dynamic name
+        //hm.getHeatmap(); // Pour obtenir la heatmap
         Client alice = new Client(1234, id);
         //Client bob = new Client(1234, 1);
 
