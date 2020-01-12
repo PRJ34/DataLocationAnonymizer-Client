@@ -50,10 +50,12 @@ public class Client {
                         socketChannel.read(buffer);
                     }
                     buffer.flip();
-                    CharBuffer s = StandardCharsets.UTF_8.decode(buffer);
+                    CharBuffer firstRead = StandardCharsets.UTF_8.decode(buffer);
                     buffer.clear();
-                    System.out.println("message reçu " + s.toString());
-                    if(s.toString().contains("ok")){
+                    System.out.println("message reçu " + firstRead.toString());
+                    if(firstRead.toString().contains("start")){
+                        String timeFrame = firstRead.toString().split(":")[1];
+                        System.out.println(timeFrame);
                         this.generateKpair();
                         String payload_string = this.id+":"+this.port+":";
                         ByteBuffer string_buffer = StandardCharsets.UTF_8.encode(payload_string);
