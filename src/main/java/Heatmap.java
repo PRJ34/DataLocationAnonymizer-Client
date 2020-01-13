@@ -1,6 +1,6 @@
 import java.io.*;
 
-public class Heatmap {
+public class Heatmap implements Serializable {
 
     private int heatmap[][];
 
@@ -44,7 +44,7 @@ public class Heatmap {
             int j = 0;
             for (String v : values) {
                 System.out.print(v + " ");
-                heatmap[i][j] = Integer.valueOf(v);
+                heatmap[i][j] = (int) Double.parseDouble(v);
                 j++;
             }
             System.out.println();
@@ -55,5 +55,9 @@ public class Heatmap {
 
     public int[][] getHeatmap() {
         return heatmap;
+    }
+
+    public void setHeatmap(int[][] heatmap) {
+        this.heatmap = heatmap;
     }
 }

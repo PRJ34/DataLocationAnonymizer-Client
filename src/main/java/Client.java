@@ -1,13 +1,11 @@
 import javax.crypto.KeyAgreement;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.IntBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -75,8 +73,8 @@ public class Client {
                         buffer.clear();
                         this.computeSharedSecret();
                         this.computeMask(60,181);
-                        this.runPythonScript(timeFrame);
-                        Heatmap hm = new Heatmap("map.csv");
+                        this.runPythonScript(timeFrame+" "+this.id);
+                        Heatmap hm = new Heatmap("/home/bastien/Documents/heatmap/map.csv");
                         int[][] hm_arr = hm.getHeatmap();
                         hm_arr = this.addMasks(hm_arr);
 
@@ -89,7 +87,14 @@ public class Client {
                             }
                             System.out.println();
                         }
+                        for (int h=0; h<10;h++){
+                            for(int w=0; w<10;w++){
+                                System.out.print(hm_arr[h][w]+":");
+                            }
+                            System.out.println();
+                        }
                         socketChannel.close();
+                        break;
                     }
 
                 }
@@ -107,14 +112,11 @@ public class Client {
     }
 
     public void runPythonScript(String param) throws IOException {
-        int number1 = 10;
-        int number2 = 32;
-
-        ProcessBuilder pb = new ProcessBuilder("python","create_map.py",""+param);
+        ProcessBuilder pb = new ProcessBuilder("python","/home/bastien/Documents/heatmap/create_map.py",""+param);
         Process p = pb.start();
 
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        int ret = Integer.parseInt(in.readLine());
+        in.readLine();
     }
 
     public int[][] addMasks(int[][] hm){
