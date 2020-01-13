@@ -1,3 +1,5 @@
+package root;
+
 import java.io.*;
 
 public class Heatmap {

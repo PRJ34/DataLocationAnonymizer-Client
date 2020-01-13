@@ -1,16 +1,15 @@
-import javax.crypto.KeyAgreement;
-import java.nio.ByteBuffer;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
+package root;
+
+import java.io.IOException;
 
 public class Main {
-    public static void main (String[] args){
+    public static void main (String[] args) throws IOException {
         int id = Integer.valueOf(args[0]);
-        Heatmap hm = new Heatmap("map.csv"); // TODO Dynamic name
-        hm.getHeatmap(); // Pour obtenir la heatmap
-        Heatmap.saveHeatmap("map2.csv", hm.getHeatmap());
-      // Client alice = new Client(1234, id);
-        //Client bob = new Client(1234, 1);
+        //root.Heatmap hm = new root.Heatmap("map.csv"); // TODO Dynamic name
+        //hm.getHeatmap(); // Pour obtenir la heatmap
+        //root.Heatmap.saveHeatmap("map2.csv", hm.getHeatmap());
+        Client alice = new Client(1234, id);
+        //root.Client bob = new root.Client(1234, 1);
 
 /*        try {
             KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");;

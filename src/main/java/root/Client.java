@@ -1,3 +1,5 @@
+package root;
+
 import javax.crypto.KeyAgreement;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
@@ -134,15 +136,13 @@ public class Client {
         }
     }
 
-    public void runPythonScript(String param) throws IOException {
-        int number1 = 10;
-        int number2 = 32;
+    public void runPythonScript(String tm1, String tm2, int id) throws IOException {
 
-        ProcessBuilder pb = new ProcessBuilder("python","create_map.py",""+param);
+        ProcessBuilder pb = new ProcessBuilder("python3","/Users/antoinemathat/Desktop/heatmap/create_map.py", tm1, tm2, String.valueOf(id));
         Process p = pb.start();
 
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        int ret = Integer.parseInt(in.readLine());
+        in.readLine();
     }
 
     public int[][] addMasks(int[][] hm){
