@@ -94,7 +94,6 @@ public class Client {
                             System.out.println();
                         }
                         socketChannel.close();
-                        break;
                     }
 
                 }
@@ -108,6 +107,43 @@ public class Client {
             } catch (InvalidKeyException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private List<ByteBuffer[]> buildHeatmapBuffer(double heatmap[][]) {
+        List<ByteBuffer[]> buffers = new ArrayList<>();
+
+        for (int i = 0; i < Heatmap.HEATMAP_ROW; i++) {
+            ByteBuffer buffer[] = new ByteBuffer[Heatmap.HEATMAP_COL];
+            for (int j = 0; j < Heatmap.HEATMAP_COL; j++) {
+                buffer[j] = ByteBuffer.allocate(2048);
+                buffer[j].putDouble(heatmap[i][j]);
+            }
+            buffers.add(buffer);
+        }
+
+        return buffers;
+    }
+
+    public void sendHeatmap(double heatmap[][]) {
+//        List<ByteBuffer[]> buffers = this.buildHeatmapBuffer(heatmap);
+//
+//        for (ByteBuffer[] buffer : buffers) {
+//            try {
+//                socketChannel.write(buffer);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+        try {
+            socketChannel.configureBlocking(true);
+            ObjectOutputStream oos = new
+                    ObjectOutputStream(socketChannel.socket().getOutputStream());
+            oos.writeObject(heatmap);
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
