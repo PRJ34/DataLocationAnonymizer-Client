@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.IntBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -40,14 +41,15 @@ public class Client {
     }
 
     public void start(){
-        ByteBuffer buffer = ByteBuffer.allocate(4000);
+        int bufferSize = 10000;
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
         while (true){
             try {
                 if(socketChannel == null || !socketChannel.isOpen())
                     socketChannel = SocketChannel.open(new InetSocketAddress("localhost", serverPort));
                 else if(socketChannel.isConnected()){
                     System.out.println("Connected");
-                    while (buffer.remaining() == 4000) {
+                    while (buffer.remaining() == bufferSize) {
                         socketChannel.read(buffer);
                     }
                     buffer.flip();
@@ -66,15 +68,24 @@ public class Client {
                         System.out.println("send info to server");
                         socketChannel.write(payload_buffer);
                         System.out.println("wait for table from server");
-                        while (buffer.remaining() == 4000) {
+                        while (buffer.remaining() == bufferSize) {
                             socketChannel.read(buffer);
                         }
                         buffer.flip();
                         this.parseTablePK(buffer);
                         buffer.clear();
                         this.computeSharedSecret();
-                        this.computeMask(181,60);
-                        for(int[][]m : this.masks){
+                        this.computeMask(60,181);
+                        String tf[] = timeFrame.split(" ");
+                        this.runPythonScript(tf[0], tf[1], id);
+                        Heatmap hm = new Heatmap("map" + id + ".csv");
+                        int[][] hm_arr = hm.getHeatmap();
+                        hm_arr = this.addMasks(hm_arr);
+                        Heatmap.saveHeatmap("mask" + id + ".csv", hm_arr);
+                        System.out.println("Terminé id : " + id);
+                        break;
+                        //print to check if there is common masks between clients as planned
+                       /* for(int[][]m : this.masks){
                             for (int h=0; h<10;h++){
                                 for(int w=0; w<10;w++){
                                     System.out.print(m[h][w]+":");
@@ -82,7 +93,13 @@ public class Client {
                             }
                             System.out.println();
                         }
-                        socketChannel.close();
+                        for (int h=0; h<10;h++){
+                            for(int w=0; w<10;w++){
+                                System.out.print(hm_arr[h][w]+":");
+                            }
+                            System.out.println();
+                        }*/
+                        //socketChannel.close();
                     }
 
                 }
@@ -99,6 +116,7 @@ public class Client {
         }
     }
 
+    @Deprecated
     private List<ByteBuffer[]> buildHeatmapBuffer(double heatmap[][]) {
         List<ByteBuffer[]> buffers = new ArrayList<>();
 
@@ -114,6 +132,7 @@ public class Client {
         return buffers;
     }
 
+    @Deprecated
     public void sendHeatmap(double heatmap[][]) {
 //        List<ByteBuffer[]> buffers = this.buildHeatmapBuffer(heatmap);
 //
